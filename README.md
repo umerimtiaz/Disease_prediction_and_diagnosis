@@ -7,6 +7,8 @@
 
  As a programmer, you may be familiar with the concept of building predictive models using machine learning algorithms. Disease prediction and diagnosis involve using these techniques to identify early signs of diseases or conditions based on patient data such as symptoms, medical history, and diagnostic tests. Here's a breakdown of the process:
 
+ But before you start you may want to get famililar with the meidcal terminology and features. A good read is https://www.nature.com/articles/s41523-022-00478-y. This project is a machine learning model for predicting.
+
 1. **Data Collection**: The first step is to gather relevant data from various sources, including electronic health records (EHRs), medical imaging reports, laboratory test results, patient surveys, and wearable devices. This data typically includes demographic information, medical history, symptoms, vital signs, diagnostic test results, and any other relevant clinical information.
 
 2. **Data Preprocessing**: Once the data is collected, it needs to be cleaned and preprocessed to ensure its quality and consistency. This involves tasks such as handling missing values, standardizing data formats, encoding categorical variables, and removing outliers or noise from the dataset.
