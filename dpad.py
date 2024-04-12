@@ -29,7 +29,7 @@ if(load_data_once == 0):
     label_encoder = LabelEncoder()
     # Fit label encoder and transform target variable
     #print(y)
-    y_dash = np.ravel(y)
+    y_dash = np.ravel(y["Outcome"])
     #print(y_dash)
     #Label Encoding the features (N as 0,R as 1)
     y_encoded = label_encoder.fit_transform(y_dash)
@@ -61,63 +61,82 @@ label_image_source = "https://myclgnotes.com/wp-content/uploads/2019/08/Guide-to
 normal_human_breast_tissues = "https://vitrovivo.com/wordpress/wp-content/uploads/2018/03/HuPS-02001A1-Normal-Breast-10x.jpg"
 cancer_human_breast_tissues = "https://st.focusedcollection.com/13422768/i/1800/focused_160229056-stock-photo-metastatic-breast-cancer.jpg"
 
+# Tabs for separate data display
+tab1, tab2, tab3 = st.tabs(["Predictions", "Confusion Matrix and scores", "Data graphs"])
 
-col1, col2, col3 = st.columns([2, 1, 2])
+with tab1:
+    col1, col2, col3 = st.columns([2, 1, 2])
 
-data_selector = st.slider("Pick a test data to label the data", 1, X_test.shape[0], value=9, help="slide to select stored test data for a prediction" )
+    data_selector = st.slider("Pick a test data to label the data", 1, X_test.shape[0], value=9, help="slide to select stored test data for a prediction" )
 
-#if(slider logic) based on majority score from all the y_predicts display image "no cancer" or "reappear cancer"
+    #if(slider logic) based on majority score from all the y_predicts display image "no cancer" or "reappear cancer"
 
-y_predict_scores = np.array([])
-for model_name in model_names:
-    # loading the model and run for scores - score calculation
-    model_file_name = model_name+".joblib"
-    print("Loading Model: ", model_file_name)
-    grid_search_model = joblib.load(model_file_name)
-    data_point = [X_test[data_selector]]
-    #print("X_test[data_selector]", data_point)
-    # Making predictions using test data
-    y_pred = int(grid_search_model.predict(data_point))
-    print(f'data_selector: {data_selector}, y_pred :{y_pred}, model_name :{model_name}')
+    y_predict_scores = np.array([])
+    for model_name in model_names:
+        # loading the model and run for scores - score calculation
+        model_file_name = model_name+".joblib"
+        print("Loading Model: ", model_file_name)
+        grid_search_model = joblib.load(model_file_name)
+        data_point = X_test[data_selector-1]
+        print("X_test[data_selector-1]", data_point)
+        # Making predictions using test data
+        y_pred = int(grid_search_model.predict([data_point]))
+        print(f'data_selector: {data_selector}, y_pred :{y_pred}, model_name :{model_name}')
+        
+        y_predict_scores=np.append(y_predict_scores, y_pred)
+
+    print(f'\n\n\ny_predict_scores : {y_predict_scores}\n\n\n')
+
+    unique, frequency = np.unique(y_predict_scores, return_counts = True)
+    count_array = np.asarray((unique, frequency)).T
+    print(f'count_array :\n {count_array} {count_array.shape} unique :{unique} frequency : {frequency}')
     
-    y_predict_scores=np.append(y_predict_scores, y_pred)
+    with col1:
+        for score, model in zip(y_predict_scores, model_names): 
+            st.write(f" {model} : {score}")
+        #st.write(f"Votes {count_array}")
+        for count in count_array:
+            if(count[1] <= 1):
+                st.write(f"{int(count[1])} Vote for {int(count[0])}")
+            else:
+                st.write(f"{int(count[1])} Votes for {int(count[0])}")
 
-print(f'\n\n\ny_predict_scores : {y_predict_scores}\n\n\n')
+    # When model produce mixed outcome results
+    if(count_array.shape[0] == 2):
+        if(count_array[0][1] >= count_array[1][1]):
+            print("if-if -> low possibility")
+            #col3.write("low possibility")
+            col3.success("low probability of disease is present")
+            col2.image(normal_human_breast_tissues)
+            
+        else:
+            print("if-else -> very high possibility")
+            #col3.write("very high possibility")
+            col3.error("high probability of disease is present")
+            col2.image(cancer_human_breast_tissues)
 
-unique, frequency = np.unique(y_predict_scores, return_counts = True)
-count_array = np.asarray((unique, frequency)).T
-print(f'count_array : {count_array} {count_array.shape} unique :{unique} frequency : {frequency}')
-
-# When model produce mixed outcome results
-if(count_array.shape[0] == 2):
-    if(count_array[0][1] >= count_array[1][1]):
-        print("low possibility")
-        col3.write("low possibility")
-        col2.image(normal_human_breast_tissues)
+    # When all models predict / label the same class
     else:
-        print("very high possibility")
-        col3.write("very high possibility")
-        col2.image(cancer_human_breast_tissues)
-
-# When all models predict / label the same class
-else:
-    if(count_array[0][0] == 0):
-        print("low possibility")
-        col3.write("low possibility")
-        col2.image(normal_human_breast_tissues)
-    else:
-        print("very high possibility")
-        col3.write("very high possibility")
-        col2.image(cancer_human_breast_tissues)
+        if(count_array[0][0] == 0):
+            print("else-if -> low possibility")
+            #col3.write("low possibility")
+            col3.success("low probability of disease is present")
+            col2.image(normal_human_breast_tissues)
+            
+        else:
+            print("else-else -> very high possibility")
+            #col3.write("very high possibility")
+            col3.error("high probability of disease is present")
+            col2.image(cancer_human_breast_tissues)
+   
 print("Working Successfull >>>>\n")
 print("\n\n------>>>>>>>>>>>>>> Code runs ok to this point\n\n\n\n")
 
-# Tabs for separate data display
-tab1, tab2 = st.tabs(["Confusion Matrix and scores", "Data graphs"])
 
-with tab1:
+# Confusion matrix and other scores of each model
+with tab2:
     sample_range_for_confusion_matrix = st.slider("Select a range for the Machine Learning Models.", 1, X.shape[0], value=(21, int(X.shape[0]/2)), help="select stored data range to display confusion matrix" )
-    col4, col5, col6 = st.columns([3, 3, 3])
+    col4, col5, col6 = st.columns([6, 1, 2])
 
     # Display EDA data using plotly
     with col4:
@@ -131,8 +150,9 @@ with tab1:
         # plot two plots
         st.write("col 6 this is EDA analysis")
 
-with tab2:
-    col4, col5, col6 = st.columns([3, 3, 3])
+# Data science EDA uing plotly
+with tab3:
+    col4, col5, col6 = st.columns([6, 1, 2])
 
     # Display EDA data using plotly
     with col4:
