@@ -12,6 +12,7 @@ import io
 import sys
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 #---------genearal EDA
 import pygwalker as pyg
 
@@ -47,14 +48,13 @@ if(load_data_once == 0):
 
     # step 3: preparing data for model prediction
     # splitting the data for training and testing
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.20, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.9, random_state=0)
 
     #Feature scaling
     sc_X = StandardScaler()
     X_train = sc_X.fit_transform(X_train)
     X_test = sc_X.transform(X_test)
     
-
 #  load data only once into memory
 load_data_once = 1
 print(f'{load_data_once}: EDA Run completed successfully')
@@ -141,28 +141,145 @@ with tab1:
    
 print("Working Successfull >>>>\n")
 print("\n\n------>>>>>>>>>>>>>> Code runs ok to this point\n\n\n\n")
-
+print("\n\ntab1 -> Concluded\n")
 
 # Confusion matrix and other scores of each model
 with tab2:
-    sample_range_for_confusion_matrix = st.slider("Select a range for the Machine Learning Models.", 1, X.shape[0], value=(21, int(X.shape[0]/2)), help="select stored data range to display confusion matrix" )
-    col4, col5, col6 = st.columns([6, 1, 2])
+    # models
+    model_names =['Logistic_Regression', 'SVM', 'Decision_Tree_Classifier', 'Random_Forest_Classifier', 'KNN']
+    # slider default
+    sample_range_for_confusion_matrix = st.slider("Select a range for the Machine Learning Models.", min_value = 1, max_value = X_test.shape[0], value = (1, int(X_test.shape[0]/2)), help="select stored data range to display confusion matrix" )
+    
+    print("\n\ntab2 -> initiated\n")
+    
+    # assigning values
+    slider_min_value = sample_range_for_confusion_matrix[0]
+    slider_max_value = sample_range_for_confusion_matrix[1]
+    print(f'tab2 -> slider_min_value: {slider_min_value}')
+    print(f'tab2 -> slider_max_value: {slider_max_value}')
+    
+    # Loading model and running score analysis
+    models_scores_accuracy = []
+    models_scores_f1_score = []
+    models_scores_precision_score = []
+    models_scores_recall_score = []
+    models_scores_confusion_matrix = []
 
-    # Display EDA data using plotly
-    with col4:
-        #plot two plots
-        st.write("col 4 this is EDA analysis")
-    with col5:
-        # plot two plots
-        st.write("col 5 this is EDA analysis")
+    for model_name in model_names:
+            
+        # loading the model and run for scores - score calculation
+        model_file_name = model_name+".joblib"
+        print("Loading Model: ", model_file_name)
+        grid_search_model = joblib.load(model_file_name)
 
-    with col6:
-        # plot two plots
-        st.write("col 6 this is EDA analysis")
+        # Making predictions using test data
+        y_pred = grid_search_model.predict(X_test[slider_min_value:slider_max_value])
+        
+        print("Running test score >>>> working")
+        # Calculate accuracy score for all models and storing in an array
+        model_accuracy = accuracy_score(y_test[slider_min_value:slider_max_value], y_pred)
+        models_scores_accuracy.append([model_name, model_accuracy])
 
+        # Calculate f1 score for all models and storing in an array
+        model_f1_score = f1_score(y_test[slider_min_value:slider_max_value], y_pred)
+        models_scores_f1_score.append([model_name, model_f1_score])
+
+        # Calculate precision score for all models and storing in an array
+        model_precision_score = precision_score(y_test[slider_min_value:slider_max_value], y_pred)
+        models_scores_precision_score.append([model_name, model_precision_score])
+
+        # Calculate recall score for all models and storing in an array
+        model_recall_score = recall_score(y_test[slider_min_value:slider_max_value], y_pred)
+        models_scores_recall_score.append([model_name, model_recall_score])
+    
+        # Calculate confusion matrix for all models and storing in an array
+        model_confusion_matrix = confusion_matrix(y_test[slider_min_value:slider_max_value], y_pred)
+        models_scores_confusion_matrix.append([model_name, model_confusion_matrix])
+
+        print("Working Successfull >>>>", model_name, "\n")
+    
+    # confusion matrix - referebce: https://www.v7labs.com/blog/confusion-matrix-guide
+    list_max =[np.max(cm[1].flatten()) for cm in models_scores_confusion_matrix]
+    list_min =[np.min(cm[1].flatten()) for cm in models_scores_confusion_matrix]
+
+    max_val = np.max(list_max)
+    min_val = np.min(list_min) 
+    print(max_val)
+    print(min_val)
+    
+    #plt.switch_backend('TkAgg')
+    # ---------> 1. Confusion matrix heatmap
+    fig, axs = plt.subplots(1, 5, figsize=(20, 4))
+    counter:int = 0
+
+    for cm in models_scores_confusion_matrix:
+        conf_matrix = cm[1]
+        model = cm[0]
+        print("\n @:",counter, "\nModel:", model, "\nScores:\n",conf_matrix)
+        
+        
+        # Plot the first heatmap using viridis
+        im=axs[counter].imshow(conf_matrix, cmap='viridis', vmin = min_val, vmax = max_val)
+        axs[counter].set_title(f'{model}')
+        fig.colorbar(im, ax=axs[counter], shrink=0.7)
+        
+        # Hide x and y ticks
+        axs[counter].set_xticks([])
+        axs[counter].set_yticks([])
+    
+        # Set x-axis and y-axis labels
+        axs[counter].set_xlabel('<Posiive> Predicted <Negative>')
+        axs[counter].set_ylabel('<False> Actual <True>')
+        
+        # Add text annotations for each cell in the confusion matrix
+        for i in range(conf_matrix.shape[0]):
+            for j in range(conf_matrix.shape[1]):
+                axs[counter].text(j, i, str(conf_matrix[i, j]), ha='center', va='center', color='black')
+                print(f"I am here >>> End of figure - text lable >>>")
+        #st.pyplot(fig)
+        counter = counter + 1
+        print(f"I am here >>> End of figure")
+    st.pyplot(fig)
+    
+    # ----------> 2. Confusion matrix radar charts using matpltlib
+    # Define labels for radar chart axes
+    labels = ['True Positive','False Negative','False Positive', 'True Negative']
+    print(labels)
+    # Create subplots for each radar chart
+    fig, axs = plt.subplots(1, 5, figsize=(20, 4), subplot_kw=dict(polar=True))
+    counter = 0
+
+    print(max_val)
+    for cm in models_scores_confusion_matrix:
+        model = cm[0]
+        data = cm[1].flatten()
+        
+        # Compute angle for each axis
+        angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+        
+        # Plot radar chart
+        axs[counter].fill(angles, data, color='blue', alpha=0.25)
+        axs[counter].plot(angles, data, color='blue', linewidth=2)
+        axs[counter].set_ylim(0, max_val)  # Adjust the y-axis limit if needed
+        
+        # Add labels
+        axs[counter].set_xticks(angles)
+        axs[counter].set_xticklabels(labels)
+        axs[counter].set_title(model)
+        
+        # Increment counter
+        counter += 1
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Show the plot
+    st.pyplot(plt)
+    
+    print("\n\ntab2 -> Concluded\n")
 # Data science EDA uing plotly
 with tab3:
-    
+    print("\n\ntab3 -> Initiated\n")
     buffer = io.StringIO()
     sys.stdout = buffer
     df.info()
@@ -313,3 +430,4 @@ with tab3:
     # Show the plot
     st.plotly_chart(fig11, use_container_width=True)
 
+    print("\n\ntab3 -> Concluded\n")
