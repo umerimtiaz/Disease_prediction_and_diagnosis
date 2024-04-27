@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import plotly as pltly
 import plotly.express as px
 import streamlit as st
+import requests
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo 
@@ -57,8 +58,28 @@ if(load_data_once == 0):
 load_data_once = 1
 print(f'{load_data_once}: EDA Run completed successfully')
 
+model_urls = [
+    'https://github.com/umerimtiaz/Disease_prediction_and_diagnosis/main/Logistic_Regression.joblib',
+    'https://github.com/umerimtiaz/Disease_prediction_and_diagnosis/main/SVM.joblib',
+    'https://github.com/umerimtiaz/Disease_prediction_and_diagnosis/main/Decision_Tree_Classifier.joblib',
+    'https://github.com/umerimtiaz/Disease_prediction_and_diagnosis/main/Random_Forest_Classifier.joblib',
+    'https://github.com/umerimtiaz/Disease_prediction_and_diagnosis/main/KNN.joblib'
+]
+
 #models = [LogisticRegression(), SVC(), DecisionTreeClassifier(), RandomForestClassifier(), KNeighborsClassifier()]
 model_names =['Logistic_Regression', 'SVM', 'Decision_Tree_Classifier', 'Random_Forest_Classifier', 'KNN']
+for url, model in zip(model_urls, model_names):
+    #print(f"for loop --> url : {url} -> model: {model}")
+    response = requests.get(url)
+    print(f"\nfor loop --> url : {url} -> model: {model} -> response status : {response.status_code}")
+    if response.status_code == 200:
+        with open(model, "wb") as f:
+            f.write(response.content)
+        model_loaded = joblib.load(model)
+        print("\nif---> Model {} downloaded Successfully -> File name {}".format(url, model))
+    else:
+        print("\nelse ---> Model {} download Failed".format(url))
+
 
 # View of Model prediction and a few EDA plots
 #prin(f"Data visualisation and playround using streamlit")
@@ -84,7 +105,12 @@ with tab1:
         # loading the model and run for scores - score calculation
         model_file_name = model_name+".joblib"
         print("Loading Model: ", model_file_name)
+        
+        #----Loading model from the github
         grid_search_model = joblib.load(model_file_name)
+
+        #----end loading model
+        
         data_point = X_test[data_selector-1]
         print("X_test[data_selector-1]", data_point)
         # Making predictions using test data
