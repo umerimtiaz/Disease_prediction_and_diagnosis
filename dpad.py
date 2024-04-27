@@ -13,8 +13,6 @@ import sys
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
-#---------genearal EDA
-import pygwalker as pyg
 
 print("\n\n\n\nStarting -------->>>>>>>>>>")
 load_data_once = 0
