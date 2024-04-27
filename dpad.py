@@ -68,17 +68,18 @@ model_urls = [
 
 #models = [LogisticRegression(), SVC(), DecisionTreeClassifier(), RandomForestClassifier(), KNeighborsClassifier()]
 model_names =['Logistic_Regression', 'SVM', 'Decision_Tree_Classifier', 'Random_Forest_Classifier', 'KNN']
-for url, model in zip(model_urls, model_names):
-    #print(f"for loop --> url : {url} -> model: {model}")
-    response = requests.get(url)
-    print(f"\nfor loop --> url : {url} -> model: {model} -> response status : {response.status_code}")
-    if response.status_code == 200:
-        with open(model, "wb") as f:
-            f.write(response.content)
-        model_loaded = joblib.load(model)
-        print("\nif---> Model {} downloaded Successfully -> File name {}".format(url, model))
-    else:
-        print("\nelse ---> Model {} download Failed".format(url))
+
+#for url, model in zip(model_urls, model_names):
+#    #print(f"for loop --> url : {url} -> model: {model}")
+#    response = requests.get(url)
+#    print(f"\nfor loop --> url : {url} -> model: {model} -> response status : {response.status_code}")
+#    if response.status_code == 200:
+#        with open(model, "wb") as f:
+#            f.write(response.content)
+#        model_loaded = joblib.load(model)
+#        print("\nif---> Model {} downloaded Successfully -> File name {}".format(url, model))
+#    else:
+#        print("\nelse ---> Model {} download Failed".format(url))
 
 
 # View of Model prediction and a few EDA plots
