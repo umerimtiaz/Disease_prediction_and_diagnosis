@@ -1,5 +1,5 @@
 # Disease_prediction_and_diagnosis
- ML Modles related to Disease Prediction and Diagnosis: Build predictive models to identify early signs of diseases or conditions based on patient data such as symptoms, medical history, and diagnostic tests.
+ Machine Learning Models related to Disease Prediction and Diagnosis: Build predictive models to identify early signs of diseases or conditions based on patient data such as symptoms, medical history, and diagnostic tests.
 
  Version 0.0: This is a text information only based model and data does not include audio, video and images in model generation and prediction.
  
